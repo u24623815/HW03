@@ -28,6 +28,11 @@
                         <label>Phone</label>
                         <input type="text" id="phone" name="phone" class="form-control" />
                     </div>
+                    <!-- ADD STORE DROPDOWN -->
+                    <div class="form-group">
+                        <label>Store</label>
+                        @Html.DropDownList("store_id", ViewBag.Stores as SelectList, "Select Store", new { @class = "form-control", required = "required" })
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -74,6 +79,11 @@
                             <option value="1">Active</option>
                             <option value="0">Inactive</option>
                         </select>
+                    </div>
+                    <!-- ADD STORE DROPDOWN -->
+                    <div class="form-group">
+                        <label>Store</label>
+                        @Html.DropDownList("store_id", ViewBag.Stores as SelectList, "Select Store", new { @class = "form-control", required = "required" })
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -401,7 +401,7 @@
                 modal.find('#updateCustState').val(button.data('state'));
             });
 
-            // Product Modal Data Population
+            /// Product Modal Data Population 
             $('#editProductModal').on('show.bs.modal', function (event) {
                 var button = $(event.relatedTarget);
                 var modal = $(this);
@@ -409,6 +409,7 @@
                 modal.find('#productName').val(button.data('product-name'));
                 modal.find('#listPrice').val(button.data('list-price'));
                 modal.find('#modelYear').val(button.data('model-year'));
+                //
             });
 
             $('#updateProductModal').on('show.bs.modal', function (event) {
@@ -418,6 +419,7 @@
                 modal.find('#updateProductName').val(button.data('product-name'));
                 modal.find('#updateListPrice').val(button.data('list-price'));
                 modal.find('#updateModelYear').val(button.data('model-year'));
+                //
             });
 
             // Delete Modal Data Population
