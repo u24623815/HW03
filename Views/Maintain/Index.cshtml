@@ -1,0 +1,446 @@
+﻿@model HW03.Models.MaintainViewModel
+@{
+    ViewBag.Title = "Maintain Records";
+}
+
+<div class="container-fluid">
+    <h1 class="mb-4">Maintain Records</h1>
+
+    <!--success and error -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <!-- position -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="form-inline">
+                <label class="mr-2">Show Staff:</label>
+                <select id="staffPositionFilter" class="form-control form-control-sm">
+                    <option value="0">All Staff</option>
+                    @for (int i = 1; i <= Model.Staffs.Count; i++)
+                    {
+                        <option value="@i">Staff #@i</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-inline">
+                <label class="mr-2">Show Customer:</label>
+                <select id="customerPositionFilter" class="form-control form-control-sm">
+                    <option value="0">All Customers</option>
+                    @for (int i = 1; i <= Model.Customers.Count; i++)
+                    {
+                        <option value="@i">Customer #@i</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-inline">
+                <label class="mr-2">Show Product:</label>
+                <select id="productPositionFilter" class="form-control form-control-sm">
+                    <option value="0">All Products</option>
+                    @for (int i = 1; i <= Model.Products.Count; i++)
+                    {
+                        <option value="@i">Product #@i</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!--page merging part-->
+    <div class="row">
+        <!-- staff section -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        Staff Members
+                        <span class="badge badge-warning float-right">@Model.Staffs.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                    <div id="staffList">
+                        @if (Model.Staffs.Any())
+                        {
+                            foreach (var staff in Model.Staffs)
+                            {
+                                <div class="card mb-2 staff-item">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title">@staff.first_name @staff.last_name</h6>
+                                        <p class="card-text mb-1">
+                                            <small class="text-muted">
+                                                <strong>Staff ID:</strong> @staff.staff_id<br />
+                                                <strong>Email:</strong> @staff.email<br />
+                                                <strong>Phone:</strong> @staff.phone<br />
+                                                <strong>Active:</strong> @(staff.active == 1 ? "Yes" : "No")<br />
+                                                <strong>Store:</strong> @staff.StoreName<br />
+                                                <strong>Manager:</strong> @staff.ManagerName
+                                            </small>
+                                        </p>
+                                        <div class="mt-2">
+                                            <!-- edit, update, delete -->
+                                            <button class="btn btn-sm btn-warning"
+                                                    data-toggle="modal"
+                                                    data-target="#editStaffModal"
+                                                    data-staff-id="@staff.staff_id"
+                                                    data-first-name="@staff.first_name"
+                                                    data-last-name="@staff.last_name"
+                                                    data-email="@staff.email"
+                                                    data-phone="@staff.phone">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-info"
+                                                    data-toggle="modal"
+                                                    data-target="#updateStaffModal"
+                                                    data-staff-id="@staff.staff_id"
+                                                    data-first-name="@staff.first_name"
+                                                    data-last-name="@staff.last_name"
+                                                    data-email="@staff.email"
+                                                    data-phone="@staff.phone"
+                                                    data-active="@staff.active">
+                                                Update
+                                            </button>
+                                            <button class="btn btn-sm btn-danger"
+                                                    data-toggle="modal"
+                                                    data-target="#deleteStaffModal"
+                                                    data-staff-id="@staff.staff_id"
+                                                    data-staff-name="@staff.first_name @staff.last_name">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">No staff members found.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--customers section -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        Customers
+                        <span class="badge badge-warning float-right">@Model.Customers.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                    <div id="customerList">
+                        @if (Model.Customers.Any())
+                        {
+                            foreach (var customer in Model.Customers)
+                            {
+                                <div class="card mb-2 customer-item">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title">@customer.first_name @customer.last_name</h6>
+                                        <p class="card-text mb-1">
+                                            <small class="text-muted">
+                                                <strong>Customer ID:</strong> @customer.customer_id<br />
+                                                <strong>Email:</strong> @customer.email<br />
+                                                <strong>Phone:</strong> @customer.phone<br />
+                                                <strong>Location:</strong> @customer.city, @customer.state
+                                            </small>
+                                        </p>
+                                        <div class="mt-2">
+                                            <!-- edit, update, delete  buttons -->
+                                            <button class="btn btn-sm btn-warning"
+                                                    data-toggle="modal"
+                                                    data-target="#editCustomerModal"
+                                                    data-customer-id="@customer.customer_id"
+                                                    data-first-name="@customer.first_name"
+                                                    data-last-name="@customer.last_name"
+                                                    data-email="@customer.email"
+                                                    data-phone="@customer.phone"
+                                                    data-city="@customer.city"
+                                                    data-state="@customer.state">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-info"
+                                                    data-toggle="modal"
+                                                    data-target="#updateCustomerModal"
+                                                    data-customer-id="@customer.customer_id"
+                                                    data-first-name="@customer.first_name"
+                                                    data-last-name="@customer.last_name"
+                                                    data-email="@customer.email"
+                                                    data-phone="@customer.phone"
+                                                    data-city="@customer.city"
+                                                    data-state="@customer.state">
+                                                Update
+                                            </button>
+                                            <button class="btn btn-sm btn-danger"
+                                                    data-toggle="modal"
+                                                    data-target="#deleteCustomerModal"
+                                                    data-customer-id="@customer.customer_id"
+                                                    data-customer-name="@customer.first_name @customer.last_name">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">No customers found.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--products section-->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        Products
+                        <span class="badge badge-warning float-right">@Model.Products.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- filter part-->
+                    @using (Html.BeginForm("Index", "Maintain", FormMethod.Get))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label>Filter by Brand:</label>
+                                @Html.DropDownList("brandFilter", ViewBag.Brands as SelectList, "All Brands", new { @class = "form-control", onchange = "this.form.submit()" })
+                            </div>
+                            <div class="col-md-6">
+                                <label>Filter by Category:</label>
+                                @Html.DropDownList("categoryFilter", ViewBag.Categories as SelectList, "All Categories", new { @class = "form-control", onchange = "this.form.submit()" })
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Products List -->
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        @if (Model.Products.Any())
+                        {
+                            foreach (var product in Model.Products)
+                            {
+                                <div class="card mb-3 product-item">
+                                    <div class="card-body p-2">
+                                        <!-- Product Image-->
+                                        <div class="text-center mb-2">
+                                            <img src="@Url.Content(product.ImagePath)"
+                                                 alt="@product.product_name"
+                                                 class="img-fluid rounded"
+                                                 style="max-height: 120px; width: auto;"
+                                                 onerror="this.src='@Url.Content("~/Content/Images/default_bike.jpeg")'; this.alt='Default Bike Image'" />
+                                        </div>
+
+                                        <h6 class="card-title text-center">@product.product_name</h6>
+                                        <p class="card-text mb-1">
+                                            <small class="text-muted">
+                                                <strong>Product ID:</strong> @product.product_id<br />
+                                                <strong>Brand:</strong> @product.brand_name<br />
+                                                <strong>Category:</strong> @product.category_name<br />
+                                                <strong>Year:</strong> @product.model_year<br />
+                                                <strong>Price:</strong> $@product.list_price
+                                            </small>
+                                        </p>
+                                        <div class="mt-2 text-center">
+                                            <!--edit, delete, update buttons  -->
+                                            <button class="btn btn-sm btn-warning"
+                                                    data-toggle="modal"
+                                                    data-target="#editProductModal"
+                                                    data-product-id="@product.product_id"
+                                                    data-product-name="@product.product_name"
+                                                    data-list-price="@product.list_price"
+                                                    data-model-year="@product.model_year">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-info"
+                                                    data-toggle="modal"
+                                                    data-target="#updateProductModal"
+                                                    data-product-id="@product.product_id"
+                                                    data-product-name="@product.product_name"
+                                                    data-list-price="@product.list_price"
+                                                    data-model-year="@product.model_year">
+                                                Update
+                                            </button>
+                                            <button class="btn btn-sm btn-danger"
+                                                    data-toggle="modal"
+                                                    data-target="#deleteProductModal"
+                                                    data-product-id="@product.product_id"
+                                                    data-product-name="@product.product_name">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">No products found matching your criteria.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Staff Modals -->
+@Html.Partial("_StaffModals")
+
+<!-- Customer Modals -->
+@Html.Partial("_CustomerModals")
+
+<!-- Product Modals -->
+@Html.Partial("_ProductModals")
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // Product filtering
+            $('#brandFilter, #categoryFilter').change(function () {
+                this.form.submit();
+            });
+            // Staff position filter
+            $('#staffPositionFilter').change(function () {
+                var position = parseInt($(this).val());
+                var $staffItems = $('.staff-item');
+
+                if (position === 0) {
+                    $staffItems.show();
+                } else {
+                    $staffItems.hide();
+                    $staffItems.eq(position - 1).show();
+                }
+            });
+
+            // Customer position filter
+            $('#customerPositionFilter').change(function () {
+                var position = parseInt($(this).val());
+                var $customerItems = $('.customer-item');
+
+                if (position === 0) {
+                    $customerItems.show();
+                } else {
+                    $customerItems.hide();
+                    $customerItems.eq(position - 1).show();
+                }
+            });
+
+            // Product position filter
+            $('#productPositionFilter').change(function () {
+                var position = parseInt($(this).val());
+                var $productItems = $('.product-item');
+
+                if (position === 0) {
+                    $productItems.show();
+                } else {
+                    $productItems.hide();
+                    $productItems.eq(position - 1).show();
+                }
+            });
+
+            // Staff Modal Data Population
+            $('#editStaffModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#staffId').val(button.data('staff-id'));
+                modal.find('#firstName').val(button.data('first-name'));
+                modal.find('#lastName').val(button.data('last-name'));
+                modal.find('#email').val(button.data('email'));
+                modal.find('#phone').val(button.data('phone'));
+            });
+
+            $('#updateStaffModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#updateStaffId').val(button.data('staff-id'));
+                modal.find('#updateFirstName').val(button.data('first-name'));
+                modal.find('#updateLastName').val(button.data('last-name'));
+                modal.find('#updateEmail').val(button.data('email'));
+                modal.find('#updatePhone').val(button.data('phone'));
+                modal.find('#updateActive').val(button.data('active'));
+            });
+
+            // Customer Modal Data Population
+            $('#editCustomerModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#customerId').val(button.data('customer-id'));
+                modal.find('#custFirstName').val(button.data('first-name'));
+                modal.find('#custLastName').val(button.data('last-name'));
+                modal.find('#custEmail').val(button.data('email'));
+                modal.find('#custPhone').val(button.data('phone'));
+                modal.find('#custCity').val(button.data('city'));
+                modal.find('#custState').val(button.data('state'));
+            });
+
+            $('#updateCustomerModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#updateCustomerId').val(button.data('customer-id'));
+                modal.find('#updateCustFirstName').val(button.data('first-name'));
+                modal.find('#updateCustLastName').val(button.data('last-name'));
+                modal.find('#updateCustEmail').val(button.data('email'));
+                modal.find('#updateCustPhone').val(button.data('phone'));
+                modal.find('#updateCustCity').val(button.data('city'));
+                modal.find('#updateCustState').val(button.data('state'));
+            });
+
+            // Product Modal Data Population
+            $('#editProductModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#productId').val(button.data('product-id'));
+                modal.find('#productName').val(button.data('product-name'));
+                modal.find('#listPrice').val(button.data('list-price'));
+                modal.find('#modelYear').val(button.data('model-year'));
+            });
+
+            $('#updateProductModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#updateProductId').val(button.data('product-id'));
+                modal.find('#updateProductName').val(button.data('product-name'));
+                modal.find('#updateListPrice').val(button.data('list-price'));
+                modal.find('#updateModelYear').val(button.data('model-year'));
+            });
+
+            // Delete Modal Data Population
+            $('#deleteStaffModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#deleteStaffId').val(button.data('staff-id'));
+                modal.find('#deleteStaffName').text(button.data('staff-name'));
+            });
+
+            $('#deleteCustomerModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#deleteCustomerId').val(button.data('customer-id'));
+                modal.find('#deleteCustomerName').text(button.data('customer-name'));
+            });
+
+            $('#deleteProductModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var modal = $(this);
+                modal.find('#deleteProductId').val(button.data('product-id'));
+                modal.find('#deleteProductName').text(button.data('product-name'));
+            });
+        });
+    </script>
+}

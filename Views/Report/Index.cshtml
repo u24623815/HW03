@@ -1,0 +1,458 @@
+﻿
+@model HW03.Models.ReportViewModel
+@{
+    ViewBag.Title = "Staff Performance Report";
+}
+
+<div class="container-fluid">
+    <h1 class="mb-4">Staff Performance Report</h1>
+
+    <!--sucesss and error message at the top -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="row">
+        <!--report generation section -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Generate Staff Performance Report</h5>
+                </div>
+                <div class="card-body">
+                    <!-- date part -->
+                    @using (Html.BeginForm("GenerateReport", "Report", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="row mb-4">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label>Start Date:</label>
+                                    <input type="date" name="startDate" class="form-control"
+                                           value="@Model.StartDate.ToString("yyyy-MM-dd")" required />
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label>End Date:</label>
+                                    <input type="date" name="endDate" class="form-control"
+                                           value="@Model.EndDate.ToString("yyyy-MM-dd")" required />
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary btn-block">Generate Report</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!--staff performance report -->
+                    @if (Model.StaffPerformance != null && Model.StaffPerformance.Any())
+                    {
+                        <div id="reportContent">
+                            <div class="report-section">
+                                <h4>Staff Performance Ranking</h4>
+                                <p class="text-muted">
+                                    Date Range: <strong>@Model.StartDate.ToString("MMM dd, yyyy")</strong> to <strong>@Model.EndDate.ToString("MMM dd, yyyy")</strong>
+                                </p>
+
+                                <!-- Performance Summary Cards -->
+                                <div class="row mb-4">
+                                    <div class="col-md-4">
+                                        <div class="card text-white bg-info">
+                                            <div class="card-body">
+                                                <h5 class="card-title">@Model.StaffPerformance.Count</h5>
+                                                <p class="card-text">Staff Members</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card text-white bg-success">
+                                            <div class="card-body">
+                                                <h5 class="card-title">@Model.StaffPerformance.Sum(s => s.TotalOrders)</h5>
+                                                <p class="card-text">Total Orders</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card text-white bg-warning">
+                                            <div class="card-body">
+                                                <h5 class="card-title">$@Model.StaffPerformance.Sum(s => s.TotalSales).ToString("F2")</h5>
+                                                <p class="card-text">Total Revenue</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!--chart-->
+                                <div class="row mb-4">
+                                    <div class="col-md-8">
+                                        <canvas id="staffPerformanceChart" width="400" height="200"></canvas>
+                                    </div>
+                                </div>
+
+                                <!--staff performance table -->
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="staffPerformanceTable">
+                                        <thead class="thead-dark">
+                                            <tr>
+                                                <th>Rank</th>
+                                                <th>Staff Name</th>
+                                                <th>Total Orders</th>
+                                                <th>Units Sold</th>
+                                                <th>Total Sales</th>
+                                                <th>Performance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @{ int rank = 1; }
+                                            @foreach (var staff in Model.StaffPerformance)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        @if (rank == 1)
+                                                        {
+                                                            <span class="badge badge-success">#@rank</span>
+                                                        }
+                                                        else if (rank <= 3)
+                                                        {
+                                                            <span class="badge badge-warning">#@rank</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge badge-secondary">#@rank</span>
+                                                        }
+                                                    </td>
+                                                    <td>@staff.StaffName</td>
+                                                    <td>@staff.TotalOrders</td>
+                                                    <td>@staff.UnitsSold</td>
+                                                    <td>$@staff.TotalSales.ToString("F2")</td>
+                                                    <td>
+                                                        @if (rank == 1)
+                                                        {
+                                                            <span class="text-success">🏆 Top Performer</span>
+                                                        }
+                                                        else if (rank <= 3)
+                                                        {
+                                                            <span class="text-warning">⭐ Excellent</span>
+                                                        }
+                                                        else if (staff.TotalSales > 0)
+                                                        {
+                                                            <span class="text-info">📈 Good</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">📊 Needs Improvement</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                                rank++;
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!--generate and export report form -->
+                                <div class="mt-4 p-3 border rounded bg-light">
+                                    <h5>Generate & Export Report</h5>
+                                    @using (Html.BeginForm("SaveReport", "Report", FormMethod.Post, new { id = "exportForm" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>File Name:</label>
+                                                    <input type="text" name="fileName" class="form-control" required
+                                                           placeholder="e.g., Staff_Performance_Report" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label>File Type:</label>
+                                                    <select name="fileType" class="form-control" id="fileTypeSelect">
+                                                        <option value="PDF">PDF</option>
+                                                        <option value="TXT">Text</option>
+                                                        <option value="CSV">CSV</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="form-group">
+                                                    <label>&nbsp;</label>
+                                                    <button type="button" class="btn btn-success btn-block" id="saveExportBtn">
+                                                        <i class="fas fa-file-export"></i> Save & Export Report
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- bonus marks, summernote rich textbox-->
+                                        <div class="form-group">
+                                            <label>Report Description:</label>
+                                            <textarea name="reportDescription" id="reportDescription" class="form-control" rows="6"
+                                                      placeholder="Add a rich description for this staff performance report..."></textarea>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (Model.StaffPerformance != null)
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                            <p>No staff performance data found for the selected date range.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                            <p>Select a date range and generate the staff performance report</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!--archive section -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        Report Archive
+                        <span class="badge badge-warning float-right">@Model.SavedReports.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    @if (Model.SavedReports.Any())
+                    {
+                        foreach (var report in Model.SavedReports)
+                        {
+                            <div class="card mb-2">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title">@report.FileName</h6>
+                                    <p class="card-text mb-1">
+                                        <small class="text-muted">
+                                            <strong>Type:</strong> @report.FileType<br />
+                                            <strong>Created:</strong> @report.CreatedDate.ToString("MMM dd, yyyy HH:mm")<br />
+                                            @if (!string.IsNullOrEmpty(report.Description))
+                                            {
+                                                <strong>Description:</strong>
+                                                <div class="rich-text-preview mt-1 p-2 border rounded bg-light">
+                                                    @Html.Raw(report.Description)
+                                                </div>
+                                            }
+                                        </small>
+                                    </p>
+                                    <div class="mt-2">
+                                        @using (Html.BeginForm("DownloadReport", "Report", FormMethod.Get, new { style = "display: inline;" }))
+                                        {
+                                            <input type="hidden" name="fileName" value="@report.FileName" />
+                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-download"></i> Download
+                                            </button>
+                                        }
+                                        @using (Html.BeginForm("DeleteReport", "Report", FormMethod.Post, new { style = "display: inline;" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="fileName" value="@report.FileName" />
+                                            <button type="submit" class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this report?')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No saved reports found.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Chart.js and jsPDF from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.1.1/dist/jspdf.es.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@3.5.13/dist/jspdf.plugin.autotable.js"></script>
+
+    <!-- Summernote Editor -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs4.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs4.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize Summernote Editor
+            $('#reportDescription').summernote({
+                height: 200,
+                toolbar: [
+                    ['style', ['bold', 'italic', 'underline', 'clear']],
+                    ['font', ['strikethrough', 'superscript', 'subscript']],
+                    ['fontsize', ['fontsize']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['height', ['height']],
+                    ['insert', ['link', 'picture', 'video']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ],
+                placeholder: 'Write your report description here... You can format text, add lists, insert links, and more!',
+                callbacks: {
+                    onInit: function() {
+                        console.log('Summernote initialized');
+                    }
+                }
+            });
+
+            // Initialize chart
+            initializeSimpleChart();
+
+            // Save & Export functionality
+            $('#saveExportBtn').click(function() {
+                const fileName = $('input[name="fileName"]').val();
+                const fileType = $('#fileTypeSelect').val();
+
+                if (!fileName) {
+                    alert('Please enter a file name.');
+                    return;
+                }
+
+                // Get the HTML content from Summernote
+                const descriptionContent = $('#reportDescription').summernote('code');
+
+                
+                console.log('Description content:', descriptionContent);
+
+                // save the report to the server
+                $('#exportForm').submit();
+
+                // export to PDF if PDF is selected
+                if (fileType === 'PDF') {
+                    setTimeout(() => {
+                        exportToPDF(fileName);
+                    }, 1000);
+                }
+            });
+        });
+
+        function initializeSimpleChart() {
+            @if (Model.StaffPerformance != null && Model.StaffPerformance.Any())
+            {
+                <text>
+                console.log('Initializing chart with data...');
+
+                var ctx = document.getElementById('staffPerformanceChart').getContext('2d');
+
+                // Simple data extraction
+                var staffNames = [@Html.Raw(string.Join(", ", Model.StaffPerformance.Select(s => $"'{s.StaffName}'")))];
+                var totalSales = [@string.Join(", ", Model.StaffPerformance.Select(s => s.TotalSales))];
+                var totalOrders = [@string.Join(", ", Model.StaffPerformance.Select(s => s.TotalOrders))];
+
+                console.log('Staff Names:', staffNames);
+                console.log('Total Sales:', totalSales);
+                console.log('Total Orders:', totalOrders);
+
+                var chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: staffNames,
+                        datasets: [{
+                            label: 'Total Sales ($)',
+                            data: totalSales,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value;
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Staff Performance - Total Sales'
+                            }
+                        }
+                    }
+                });
+
+                console.log('Chart initialized successfully');
+                </text>
+            }
+            else
+            {
+                <text>
+                console.log('No staff performance data available for chart');
+                </text>
+            }
+        }
+
+        //PDF export function
+        function exportToPDF(fileName) {
+            try {
+                const doc = new jsPDF();
+
+                //title
+                doc.setFontSize(16);
+                doc.text('Staff Performance Report', 20, 20);
+
+                // date range
+                doc.setFontSize(10);
+                doc.text('Date Range: @Model.StartDate.ToString("MMM dd, yyyy") to @Model.EndDate.ToString("MMM dd, yyyy")', 20, 35);
+
+                // chart
+                @if (Model.StaffPerformance != null && Model.StaffPerformance.Any())
+                {
+                    <text>
+                    const chartCanvas = document.getElementById('staffPerformanceChart');
+                    if (chartCanvas) {
+                        const chartImage = chartCanvas.toDataURL('image/png');
+                        doc.addImage(chartImage, 'PNG', 20, 45, 160, 80);
+                    }
+                    </text>
+                }
+
+                //table
+                doc.autoTable({
+                    html: '#staffPerformanceTable',
+                    startY: 140,
+                    styles: { fontSize: 8 }
+                });
+
+                // Save PDF
+                const pdfFileName = fileName || 'Staff_Performance_Report';
+                doc.save(pdfFileName + '.pdf');
+                alert('PDF exported successfully!');
+
+            } catch (error) {
+                console.error('PDF export error:', error);
+                alert('Error exporting PDF: ' + error.message);
+            }
+        }
+    </script>
+}
